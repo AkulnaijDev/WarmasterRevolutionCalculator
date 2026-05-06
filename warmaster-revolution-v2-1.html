@@ -1,0 +1,1091 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WMR 2.1.0 — Calcolatore Combattimento</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0c0a07;--s1:#181510;--s2:#201c12;
+  --bdr:#2a2218;--bdrg:#3a3020;--bdrh:#5a4c28;
+  --gold:#c8a84a;--goldl:#e6cb78;--goldd:#5c4e24;--golddm:#2e2810;
+  --txt:#cec090;--txtm:#80724c;--txtd:#3e3828;
+  --blue:#0e1e38;--bluel:#5090d8;--bluem:#8ab8f0;
+  --red:#280808;--redl:#c83030;--redm:#f08080;
+  --grn:#102810;--grnl:#30a030;--grnm:#80d080;
+  --ylw:#2a2808;--ylwl:#b8a020;--ylwm:#e8d060;
+  --fh:'Cinzel',Georgia,serif;--fb:'Crimson Pro',Georgia,serif;
+}
+/* ── BASE (mobile-first) ── */
+html{scroll-behavior:smooth;font-size:16px}
+body{font-family:var(--fb);background:var(--bg);color:var(--txt);margin:0;padding-bottom:3rem}
+h1,h2,h3{margin:.5rem 0}
+
+.sect-ttl{font-family:var(--fh);font-size:.6rem;font-weight:600;letter-spacing:.18rem;text-transform:uppercase;color:var(--goldd);display:flex;align-items:center;gap:.6rem;margin-bottom:.9rem}
+.sect-ttl::after{content:'';flex:1;height:1px;background:var(--bdr)}
+.lbl{display:block;font-family:var(--fh);font-size:.6rem;font-weight:600;letter-spacing:.1rem;text-transform:uppercase;color:var(--txtm);margin-bottom:.25rem}
+
+/* HEADER */
+header{text-align:center;padding:2rem 1.25rem 1.1rem;border-bottom:1px solid var(--bdrg);position:relative}
+header::after{content:'';position:absolute;bottom:-1px;left:50%;transform:translateX(-50%);width:6rem;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+.h-orn{font-size:1rem;color:var(--goldd);letter-spacing:.75rem;margin-bottom:.4rem}
+.h1{font-family:var(--fh);font-size:clamp(1.2rem,4vw,2.4rem);font-weight:700;color:var(--goldl);letter-spacing:.25rem;text-transform:uppercase}
+.h-sub{font-size:.75rem;color:var(--txtm);letter-spacing:.18rem;text-transform:uppercase;margin-top:.3rem;font-style:italic}
+
+/* MAIN */
+.main{max-width:1600px;margin:auto;padding:clamp(1rem,2vw,2.5rem)}
+.box{background:var(--s1);border:1px solid var(--bdrg);padding:1rem;margin-bottom:.75rem}
+.warn{background:#1c1008;border:1px solid #604018;color:#a07040;font-size:.75rem;padding:.45rem .7rem;margin-bottom:.6rem;font-style:italic;line-height:1.5}
+.warn b{color:#c89040}
+
+/* CONTROLS */
+select,input[type=number]{
+  width:100%;background:var(--bg);border:1px solid var(--bdrg);color:var(--txt);
+  font-family:var(--fb);font-size:.9rem;padding:.4rem .5rem;
+  -webkit-appearance:none;appearance:none;transition:border-color .2s}
+select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23c8a84a'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right .55rem center;padding-right:1.5rem;cursor:pointer}
+select:focus,input:focus{outline:none;border-color:var(--gold)}
+input[type=number]{-moz-appearance:textfield;text-align:center}
+input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
+.fg{margin-bottom:.65rem}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:.5rem}
+
+/* STAT CELLS */
+.stat-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:.3rem;margin:.65rem 0;padding:.65rem;background:var(--bg);border:1px solid var(--bdr)}
+.stat-cell{text-align:center}
+.stat-k{font-family:var(--fh);font-size:.55rem;letter-spacing:.03rem;text-transform:uppercase;color:var(--txtd);display:block;margin-bottom:.2rem}
+.stat-inp{width:100%;background:transparent;border:none;border-bottom:1px dashed var(--bdrg);color:var(--gold);font-family:var(--fh);font-size:1.1rem;font-weight:700;text-align:center;padding:0 0 .1rem;-moz-appearance:textfield}
+.stat-inp::-webkit-outer-spin-button,.stat-inp::-webkit-inner-spin-button{-webkit-appearance:none}
+.stat-inp:focus{outline:none;border-bottom-color:var(--gold)}
+.badge{display:inline-block;background:var(--golddm);color:var(--goldd);font-family:var(--fh);font-size:.55rem;letter-spacing:.1rem;padding:.12rem .5rem;text-transform:uppercase;margin-bottom:.5rem}
+
+/* ARENA */
+.arena{display:grid;grid-template-columns:1fr 2.5rem 1fr;margin-bottom:.75rem}
+.side{padding:1rem;background:var(--s1);border:1px solid var(--bdrg)}
+.side-a{border-right:none}
+.side-d{border-left:none}
+.vs-col{display:flex;align-items:center;justify-content:center;background:var(--s2);border-top:1px solid var(--bdrg);border-bottom:1px solid var(--bdrg)}
+.vs-txt{font-family:var(--fh);font-weight:700;font-size:.85rem;color:var(--redl);letter-spacing:.12rem;writing-mode:vertical-rl}
+.side-lbl{font-family:var(--fh);font-size:.6rem;font-weight:600;letter-spacing:.18rem;text-transform:uppercase;color:var(--goldd);display:flex;align-items:center;gap:.5rem;margin-bottom:.75rem}
+.side-lbl::after{content:'';flex:1;height:1px;background:var(--bdr)}
+
+/* TOGGLE BUTTONS */
+.tog-row{display:flex;flex-wrap:wrap;gap:.3rem;margin-bottom:.5rem}
+.tbtn{background:var(--bg);border:1px solid var(--bdr);color:var(--txtm);font-family:var(--fb);font-size:.75rem;padding:.3rem .55rem;cursor:pointer;transition:all .15s;line-height:1.3;user-select:none}
+.tbtn:hover{border-color:var(--bdrh);color:var(--txt)}
+.tbtn.on-a{background:var(--blue);border-color:var(--bluel);color:var(--bluem)}
+.tbtn.on-d{background:var(--red);border-color:var(--redl);color:var(--redm)}
+.tbtn.on-y{background:var(--ylw);border-color:var(--ylwl);color:var(--ylwm)}
+
+/* SITUATION / MOD */
+.sit-grid{display:grid;grid-template-columns:1fr 1fr;gap:.9rem}
+.mod-grid{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:.75rem}
+.mod-box{background:var(--s1);border:1px solid var(--bdrg);padding:.9rem}
+
+/* CALC BTN */
+.calc-wrap{text-align:center;margin:1.1rem 0}
+.btn-calc{background:linear-gradient(180deg,#2a1808 0%,#180e04 100%);border:1px solid var(--gold);color:var(--goldl);font-family:var(--fh);font-size:.85rem;font-weight:600;letter-spacing:.18rem;text-transform:uppercase;padding:.7rem 2.8rem;cursor:pointer;transition:all .2s;position:relative}
+.btn-calc::before,.btn-calc::after{content:'◆';font-size:.45rem;color:var(--goldd);position:absolute;top:50%;transform:translateY(-50%)}
+.btn-calc::before{left:.9rem}.btn-calc::after{right:.9rem}
+.btn-calc:hover{background:linear-gradient(180deg,#3a2008,#250e04);border-color:var(--goldl);box-shadow:0 0 1rem rgba(200,168,74,.2)}
+
+/* D6 CHARTS */
+.d6-inner{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+.d6-chart{background:var(--s1);border:1px solid var(--bdrg);padding:.75rem}
+.d6-ttl{font-family:var(--fh);font-size:.6rem;letter-spacing:.12rem;text-transform:uppercase;color:var(--goldd);margin-bottom:.5rem;text-align:center}
+/* svg-based chart — height set by JS */
+.d6-svg-wrap{width:100%;position:relative}
+.d6-note{font-size:.72rem;color:var(--txtm);text-align:center;margin-top:.45rem;font-style:italic}
+.d6-legend{display:flex;gap:1rem;justify-content:center;margin-top:.3rem;font-size:.65rem;color:var(--txtm)}
+.d6-legend span{display:flex;align-items:center;gap:.25rem}
+.d6-legend i{display:inline-block;width:.7rem;height:.7rem;border-radius:50%}
+
+/* RESULTS */
+#results{display:none}
+#results.vis{display:block}
+.out-wrap{background:var(--s1);border:1px solid var(--bdrg);padding:1rem;margin-bottom:.75rem}
+.out-ttl{font-family:var(--fh);font-size:.65rem;letter-spacing:.12rem;text-transform:uppercase;color:var(--goldd);text-align:center;margin-bottom:.5rem}
+.out-info{font-size:.75rem;color:var(--txtm);text-align:center;margin-bottom:.6rem;line-height:1.5}
+.out-bar{height:2.75rem;display:flex;border:1px solid var(--bdr);overflow:hidden;margin-bottom:.4rem}
+.oseg{height:100%;display:flex;align-items:center;justify-content:center;font-family:var(--fh);font-size:.72rem;font-weight:700;overflow:hidden;white-space:nowrap;transition:width .6s}
+.oseg-a{background:#0a1828;color:var(--bluem)}
+.oseg-t{background:#141408;color:var(--ylwm)}
+.oseg-d{background:#200808;color:var(--redm)}
+.out-legs{display:flex;justify-content:space-between;font-size:.65rem}
+.out-legs .la{color:var(--bluem)}.out-legs .lt{color:var(--ylwm)}.out-legs .ld{color:var(--redm)}
+
+.ph-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.75rem;margin-bottom:.75rem}
+.ph{background:var(--s1);border:1px solid var(--bdrg);padding:1rem}
+.ph-ttl{font-family:var(--fh);font-size:.55rem;letter-spacing:.1rem;text-transform:uppercase;color:var(--goldd);margin-bottom:.2rem}
+.ph-name{font-size:.92rem;font-style:italic;color:var(--txt);margin-bottom:.55rem}
+.ph-info{background:var(--bg);border:1px solid var(--bdr);padding:.4rem .6rem;font-size:.72rem;color:var(--txtm);line-height:1.5;margin-bottom:.55rem}
+.ph-info b{color:var(--txt)}
+.ev-num{font-family:var(--fh);font-size:1.6rem;font-weight:700;color:var(--gold);line-height:1}
+.ev-lbl{font-family:var(--fh);font-size:.55rem;color:var(--txtm);letter-spacing:.03rem;margin-bottom:.65rem}
+
+.prow{display:grid;grid-template-columns:6rem 1fr 2.7rem;align-items:center;gap:.3rem;margin-bottom:.3rem}
+.plbl{font-family:var(--fh);font-size:.6rem;color:var(--txtm);text-align:right}
+.pbg{height:.95rem;background:var(--bg);border:1px solid var(--bdr);overflow:hidden}
+.pbar{height:100%;transition:width .5s}
+.pbar-g{background:linear-gradient(90deg,#102010,#286028)}
+.pbar-y{background:linear-gradient(90deg,#201808,#606018)}
+.pbar-r{background:linear-gradient(90deg,#240808,#882020)}
+.ppct{font-family:var(--fh);font-size:.6rem;font-weight:700;color:var(--gold);text-align:right}
+
+.margin-box{background:var(--s1);border:1px solid var(--bdrg);padding:1rem;margin-bottom:.75rem}
+.margin-cols{display:grid;grid-template-columns:1fr 1fr;gap:.9rem}
+.margin-col-ttl{font-family:var(--fh);font-size:.55rem;letter-spacing:.1rem;text-transform:uppercase;color:var(--txtm);margin-bottom:.45rem}
+
+.trkr{font-size:.72rem;color:var(--txtm);margin-bottom:.5rem;display:flex;gap:.5rem;align-items:center;flex-wrap:wrap}
+.trkr-v{font-family:var(--fh);font-size:1rem;font-weight:700;color:var(--gold)}
+.trkr-arr{color:var(--redl)}
+
+/* ── DESKTOP SCALING ── */
+@media(min-width:1024px){
+  html{font-size:18px}
+  .d6-ttl{font-size:.65rem}
+  .stat-k{font-size:.6rem}
+  .stat-inp{font-size:1.25rem}
+  .ph-info{font-size:.78rem}
+  .lbl{font-size:.65rem}
+  .warn{font-size:.78rem}
+  .tbtn{font-size:.8rem;padding:.35rem .65rem}
+  .prow{grid-template-columns:7rem 1fr 3rem}
+  .plbl{font-size:.65rem}
+  .ppct{font-size:.65rem}
+  .pbg{height:1.05rem}
+  .d6-note,.d6-legend{font-size:.72rem}
+}
+@media(min-width:1400px){
+  html{font-size:20px}
+}
+
+/* ── MOBILE BREAKPOINTS ── */
+@media(max-width:680px){
+  .arena{grid-template-columns:1fr}
+  .vs-col{border:1px solid var(--bdrg);border-top:none;border-bottom:none;padding:.5rem 0}
+  .vs-txt{writing-mode:horizontal-tb;font-size:1rem}
+  .side-a{border-right:1px solid var(--bdrg);border-bottom:none}
+  .side-d{border-left:1px solid var(--bdrg);border-top:none}
+  .ph-grid,.mod-grid,.sit-grid,.d6-inner,.margin-cols{grid-template-columns:1fr}
+  .stat-grid{grid-template-columns:repeat(3,1fr)}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="h-orn">⚔ ✦ ⚔</div>
+  <div class="h1">Warmaster Revolution</div>
+  <p class="h-sub">Calcolatore Probabilità Combattimento · Regole WMR 2.1.0 beta</p>
+</header>
+
+<div class="main">
+
+<!-- D6 REFERENCE -->
+<div class="box">
+  <div class="sect-ttl">Distribuzioni Dadi di Riferimento</div>
+  <div class="d6-inner">
+    <div class="d6-chart">
+      <div class="d6-ttl">2D6 — Drive Back, Ritirate</div>
+      <div id="d6-2"></div>
+      <div class="d6-note">Media 7 · Range 2–12 · Passa il mouse sui punti per la CDF</div>
+    </div>
+    <div class="d6-chart">
+      <div class="d6-ttl">3D6 — Fall Back (pareggio), ritirata vincitore</div>
+      <div id="d6-3"></div>
+      <div class="d6-note">Media 10.5 · Moda 10–11 · Range 3–18</div>
+    </div>
+  </div>
+</div>
+
+<!-- ARENA -->
+<div class="arena">
+  <div class="side side-a">
+    <div class="side-lbl">⚔ Attaccante</div>
+    <div class="fg"><label class="lbl">Esercito</label><select id="a-army" onchange="onArmy('a')"><option value="">— seleziona —</option></select></div>
+    <div class="fg"><label class="lbl">Unità</label><select id="a-unit" onchange="onUnit('a')"><option value="">— seleziona —</option></select></div>
+    <div id="a-sw" style="display:none">
+      <div class="badge" id="a-badge">—</div>
+      <div class="stat-grid">
+        <div class="stat-cell"><span class="stat-k">Att CC</span><input class="stat-inp" type="number" id="a-sa" min="0" max="20"></div>
+        <div class="stat-cell"><span class="stat-k">Att Tiro</span><input class="stat-inp" type="number" id="a-ssh" min="0" max="10"></div>
+        <div class="stat-cell"><span class="stat-k">Hits/stand</span><input class="stat-inp" type="number" id="a-sh" min="1" max="10"></div>
+        <div class="stat-cell"><span class="stat-k">Armatura</span><input class="stat-inp" type="number" id="a-sarm" min="0" max="6" title="0=nessuna, 3=3+, 4=4+, 5=5+, 6=6+"></div>
+        <div class="stat-cell"><span class="stat-k">Stand (base)</span><input class="stat-inp" type="number" id="a-ss" min="1" max="10"></div>
+      </div>
+    </div>
+    <div id="a-fw" style="display:none">
+      <div class="row2">
+        <div class="fg"><label class="lbl">Stand attuali in CC</label><input type="number" id="a-cs" min="1" max="10" value="3"></div>
+        <div class="fg"><label class="lbl">Bonus personaggio (dadi +)</label><input type="number" id="a-char" value="0" min="0" max="6"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="vs-col"><div class="vs-txt">VS</div></div>
+
+  <div class="side side-d">
+    <div class="side-lbl">🛡 Difensore</div>
+    <div class="fg"><label class="lbl">Esercito</label><select id="d-army" onchange="onArmy('d')"><option value="">— seleziona —</option></select></div>
+    <div class="fg"><label class="lbl">Unità</label><select id="d-unit" onchange="onUnit('d')"><option value="">— seleziona —</option></select></div>
+    <div id="d-sw" style="display:none">
+      <div class="badge" id="d-badge">—</div>
+      <div class="stat-grid">
+        <div class="stat-cell"><span class="stat-k">Att CC</span><input class="stat-inp" type="number" id="d-sa" min="0" max="20"></div>
+        <div class="stat-cell"><span class="stat-k">Att Tiro</span><input class="stat-inp" type="number" id="d-ssh" min="0" max="10"></div>
+        <div class="stat-cell"><span class="stat-k">Hits/stand</span><input class="stat-inp" type="number" id="d-sh" min="1" max="10"></div>
+        <div class="stat-cell"><span class="stat-k">Armatura</span><input class="stat-inp" type="number" id="d-sarm" min="0" max="6"></div>
+        <div class="stat-cell"><span class="stat-k">Stand (base)</span><input class="stat-inp" type="number" id="d-ss" min="1" max="10"></div>
+      </div>
+    </div>
+    <div id="d-fw" style="display:none">
+      <div class="row2">
+        <div class="fg"><label class="lbl">Stand attuali in CC</label><input type="number" id="d-cs" min="1" max="10" value="3"></div>
+        <div class="fg"><label class="lbl">Bonus personaggio (dadi +)</label><input type="number" id="d-char" value="0" min="0" max="6"></div>
+      </div>
+    </div>
+  </div>
+</div><!-- /arena -->
+
+<!-- SITUAZIONE -->
+<div class="box">
+  <div class="sect-ttl">Situazione di Combattimento</div>
+  <div class="sit-grid">
+    <div>
+      <div class="fg"><label class="lbl">Tipo di round</label>
+        <select id="sit-round" onchange="onSit()">
+          <option value="normal">Round normale</option>
+          <option value="charge">Carica (1° round)</option>
+          <option value="pursuit">Inseguimento (round vinto in precedenza)</option>
+        </select>
+      </div>
+      <div class="fg" id="purs-wrap" style="display:none">
+        <label class="lbl">Distanza ritirata turno precedente (cm) — +1 ogni 3cm interi</label>
+        <input type="number" id="purs-dist" value="0" min="0" max="60">
+      </div>
+      <div class="fg"><label class="lbl">Direzione attacco</label>
+        <select id="sit-dir" onchange="onSit()">
+          <option value="front">Frontale</option>
+          <option value="flank">Fianco → difensore −1 att</option>
+          <option value="rear">Retro → difensore −1 att</option>
+        </select>
+      </div>
+    </div>
+    <div>
+      <div class="fg"><label class="lbl">Posizione Difensore</label>
+        <select id="sit-pos" onchange="onSit()">
+          <option value="open">Allo scoperto (hit 4+)</option>
+          <option value="defended">Difeso — bosco/muro/altura (hit 5+, no bonus carica)</option>
+          <option value="fortified">Fortificato — bastioni/mura (hit 6+, no bonus carica)</option>
+        </select>
+      </div>
+      <div id="warn-cav" class="warn" style="display:none">⚠ Solo Fanteria e Artiglieria possono essere difese/fortificate.</div>
+      <div id="warn-chpos" class="warn" style="display:none">⚠ Bonus carica (+1/+2) NON si applica contro unità difese/fortificate.</div>
+      <div id="warn-dir" class="warn" style="display:none">⚠ Fianco/retro: il difensore subisce −1 ai propri attacchi (fronte di stand rivolta verso il lato/retro del nemico).</div>
+    </div>
+  </div>
+</div>
+
+<!-- MODIFICATORI -->
+<div class="mod-grid">
+  <div class="mod-box">
+    <div class="sect-ttl">⚔ Condizioni Attaccante</div>
+    <div class="tog-row">
+      <button class="tbtn" id="a-confused" onclick="tog(this,'a-confused','on-a')">😵 Confuso (−1 att)</button>
+      <button class="tbtn" id="a-terrify" onclick="tog(this,'a-terrify','on-y')">☠ Nemico Terrificante (−1 att)</button>
+    </div>
+    <div class="fg"><label class="lbl">Stand di supporto amici (+1 al risultato ciascuno, solo fanteria non confusa)</label>
+      <input type="number" id="a-supp" value="0" min="0" max="20">
+      <div id="a-suppw" class="warn" style="display:none;margin-top:5px">⚠ Solo fanteria può supportare/essere supportata.</div>
+    </div>
+  </div>
+  <div class="mod-box">
+    <div class="sect-ttl">🛡 Condizioni Difensore</div>
+    <div class="tog-row">
+      <button class="tbtn" id="d-confused" onclick="tog(this,'d-confused','on-d')">😵 Confuso (−1 att)</button>
+      <button class="tbtn" id="d-terrify" onclick="tog(this,'d-terrify','on-y')">☠ Nemico Terrificante (−1 att)</button>
+    </div>
+    <div class="fg"><label class="lbl">Stand di supporto amici (+1 al risultato ciascuno, solo fanteria non confusa)</label>
+      <input type="number" id="d-supp" value="0" min="0" max="20">
+      <div id="d-suppw" class="warn" style="display:none;margin-top:5px">⚠ Solo fanteria può supportare/essere supportata.</div>
+    </div>
+  </div>
+</div>
+
+<!-- CALC -->
+<div class="calc-wrap">
+  <button class="btn-calc" onclick="calculate()">Calcola Combattimento</button>
+</div>
+
+<!-- RESULTS -->
+<div id="results">
+
+  <div class="out-wrap">
+    <div class="out-ttl" id="r-matchup">—</div>
+    <div class="out-info" id="r-info"></div>
+    <div class="out-bar">
+      <div class="oseg oseg-a" id="ob-a" style="width:33%"><span id="ob-at"></span></div>
+      <div class="oseg oseg-t" id="ob-t" style="width:34%"><span id="ob-tt"></span></div>
+      <div class="oseg oseg-d" id="ob-d" style="width:33%"><span id="ob-dt"></span></div>
+    </div>
+    <div class="out-legs">
+      <span class="la">⚔ Attaccante vince il round</span>
+      <span class="lt">= Pareggio → entrambi fall back 3D6</span>
+      <span class="ld">Difensore vince il round 🛡</span>
+    </div>
+  </div>
+
+  <div class="ph-grid" id="ph-grid">
+    <!-- Shoot panel -->
+    <div class="ph" id="ph-shoot" style="display:none">
+      <div class="ph-ttl">TIRO DI RESISTENZA</div>
+      <div class="ph-name" id="rs-name">—</div>
+      <div class="ph-info" id="rs-info"></div>
+      <div class="trkr" id="rs-tracker"></div>
+      <div class="ev-num" id="rs-ev">—</div>
+      <div class="ev-lbl">colpi attesi (portati nel CC come carry-over)</div>
+      <label class="lbl" style="margin-top:.5rem;margin-bottom:.3rem">Stand persi prima del CC</label>
+      <div id="rs-bars"></div>
+    </div>
+    <!-- Atk receives hits -->
+    <div class="ph">
+      <div class="ph-ttl" id="ra-ttl">CC — COLPI SUBITI DALL'ATTACCANTE</div>
+      <div class="ph-name" id="ra-name">—</div>
+      <div class="ph-info" id="ra-info"></div>
+      <div class="ev-num" id="ra-ev">—</div>
+      <div class="ev-lbl" id="ra-evl">colpi CC attesi</div>
+      <label class="lbl" style="margin-top:.5rem;margin-bottom:.3rem">Stand persi totali (tiro+CC)</label>
+      <div id="ra-bars"></div>
+    </div>
+    <!-- Def receives hits -->
+    <div class="ph">
+      <div class="ph-ttl">CC — COLPI SUBITI DAL DIFENSORE</div>
+      <div class="ph-name" id="rd-name">—</div>
+      <div class="ph-info" id="rd-info"></div>
+      <div class="ev-num" id="rd-ev">—</div>
+      <div class="ev-lbl">colpi CC attesi sul difensore</div>
+      <label class="lbl" style="margin-top:.5rem;margin-bottom:.3rem">Stand persi nel CC</label>
+      <div id="rd-bars"></div>
+    </div>
+  </div>
+
+  <!-- Margin -->
+  <div class="margin-box">
+    <div class="out-ttl">Margine di vittoria → distanza di ritirata del perdente (cm)</div>
+    <div class="margin-cols">
+      <div>
+        <div class="margin-col-ttl">⚔ Se vince Attaccante — Difensore si ritira di…</div>
+        <div id="rm-a"></div>
+      </div>
+      <div>
+        <div class="margin-col-ttl">🛡 Se vince Difensore — Attaccante si ritira di…</div>
+        <div id="rm-d"></div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /results -->
+</div><!-- /main -->
+
+<script>
+/* ── DB ─────────────────────────────────────────────────── */
+const TL={inf:'Fanteria',cav:'Cavalleria',mon:'Mostro',char:'Carro',art:'Artiglieria'};
+// a=CC att/stand, sh=shoot att/stand, h=hits/stand, arm=armour save (0=none)
+// ⚠ APPROSSIMATIVI — controlla WMR 2.26 beta army book!
+const DB={
+  "Impero":[
+    {n:"Halberdiers",        t:'inf',s:3,a:3,sh:0,h:3,arm:6},
+    {n:"Crossbowmen",        t:'inf',s:3,a:3,sh:1,h:3,arm:0},
+    {n:"Handgunners",        t:'inf',s:3,a:3,sh:1,h:3,arm:0},
+    {n:"Flagellants",        t:'inf',s:3,a:5,sh:0,h:3,arm:0},
+    // {n:"Skirmishers",        t:'inf',s:3,a:4,sh:0,h:3,arm:0},
+    {n:"Knights",            t:'cav',s:3,a:3,sh:0,h:3,arm:4},
+    {n:"Pistoliers",         t:'cav',s:3,a:3,sh:1,h:3,arm:5},
+    {n:"Helblaster",         t:'art',s:1,a:1,sh:8,h:2,arm:0},
+    {n:"Cannon",             t:'art',s:2,a:1,sh:2,h:2,arm:0},
+    {n:"Steam Tank",         t:'art',s:1,a:3,sh:3,h:4,arm:3},
+  ],
+  "Tomb Kings":[
+    {n:"Skeletons",          t:'inf',s:3,a:2,sh:0,h:3,arm:6},
+    {n:"Skeleton Bowmen",    t:'inf',s:3,a:2,sh:1,h:3,arm:0},
+    {n:"Skeleton Cavalry",   t:'cav',s:3,a:2,sh:0,h:3,arm:5},
+    {n:"Skeletal Chariots",  t:'char',s:3,a:3,sh:1,h:3,arm:5},
+    {n:"Carrion",            t:'mon',s:3,a:2,sh:0,h:3,arm:6},
+    {n:"Bone Giant",         t:'mon',s:1,a:6,sh:0,h:4,arm:4},
+    {n:"Sphinx",             t:'mon',s:1,a:4,sh:0,h:6,arm:3},
+    {n:"Skull Chukka",       t:'art',s:1,a:1,sh:3,h:3,arm:0},
+    {n:"Bone Thrower",       t:'art',s:2,a:1,sh:2,h:2,arm:0},
+  ],
+  "Chaos":[
+    {n:"Chaos Warriors",     t:'inf',a:4,sh:0,h:4,arm:4,s:3},
+    {n:"Chaos Marauders",    t:'inf',a:3,sh:0,h:3,arm:5,s:3},
+    {n:"Ogres",              t:'inf',a:4,sh:0,h:4,arm:5,s:3},
+    {n:"Trolls",             t:'inf',a:5,sh:0,h:3,arm:5,s:3},
+    {n:"Marauder Horsemen",  t:'cav',a:3,sh:0,h:3,arm:5,s:3},
+    {n:"Chaos Knights",      t:'cav',a:4,sh:0,h:4,arm:4,s:3},
+    {n:"Chaos Hounds",       t:'cav',a:3,sh:0,h:3,arm:0,s:3},
+    {n:"Chaos Chariots",     t:'char',a:3,sh:0,h:3,arm:5,s:3},
+    {n:"Harpies",            t:'mon',a:2,sh:0,h:3,arm:6,s:3},
+    {n:"Dragon Ogres",       t:'mon',a:6,sh:0,h:4,arm:5,s:3},
+    {n:"Chaos Spawn",        t:'mon',a:3,sh:3,h:4,arm:3,s:1},
+  ],
+  "Orcs":[
+    {n:"Orc Warriors",       t:'inf',a:4,sh:0,h:3,arm:6,s:3},
+    {n:"Goblins",            t:'inf',a:2,sh:1,h:3,arm:0,s:3},
+    {n:"Black Orcs",         t:'inf',a:4,sh:0,h:4,arm:5,s:3},
+    {n:"Trolls",             t:'inf',a:5,sh:0,h:3,arm:5,s:3},
+    {n:"Ogres",              t:'inf',a:4,sh:0,h:4,arm:5,s:3},
+    {n:"Boar Riders",        t:'cav',a:4,sh:0,h:3,arm:5,s:3},
+    {n:"Wolf Riders",        t:'cav',a:2,sh:1,h:3,arm:6,s:3},
+    {n:"Wolf Chariots",      t:'char',a:3,sh:0,h:3,arm:6,s:3},
+    {n:"Giant",              t:'mon',a:8,sh:0,h:8,arm:5,s:1},
+    {n:"Rock Lobber",        t:'art',a:1,sh:3,h:3,arm:0,s:1},
+  ],
+  "High Elf":[
+    {n:"Spearmen",           t:'inf',a:3,sh:0,h:3,arm:5,s:3},
+    {n:"Archers",            t:'inf',a:3,sh:1,h:3,arm:6,s:3},
+    {n:"Silver Helms",       t:'cav',a:3,sh:0,h:3,arm:4,s:3},
+    {n:"Reavers",            t:'cav',a:3,sh:1,h:3,arm:6,s:3},
+    {n:"Chariots",           t:'char',a:3,sh:0,h:3,arm:5,s:3},
+    {n:"Giant Eagles",       t:'mon',a:2,sh:0,h:3,arm:6,s:3},
+    {n:"Dragon Rider",       t:'mon',a:6,sh:3,h:6,arm:4,s:1},
+    {n:"Elven Bolt Thrower", t:'art',a:1,sh:3,h:2,arm:0,s:2},
+  ],"Dwarf":[
+  {n:"Warriors",t:'inf',a:3,sh:0,h:4,arm:4,s:3},
+  {n:"Miners",t:'inf',a:3,sh:0,h:4,arm:6,s:3},
+  {n:"Handgunners",t:'inf',a:3,sh:1,h:4,arm:6,s:3},
+  {n:"Rangers",t:'inf',a:3,sh:1,h:4,arm:5,s:3},
+  {n:"Troll Slayers",t:'inf',a:5,sh:0,h:4,arm:0,s:3},
+  {n:"Cannon",t:'art',a:1,sh:2,h:2,arm:6,s:2},
+  {n:"Flame Cannon",t:'art',a:1,sh:2,h:2,arm:6,s:1},
+  {n:"Gyrocopter",t:'mach',a:1,sh:3,h:4,arm:5,s:1},
+],
+
+"Skaven":[
+  {n:"Clanrats",t:'inf',a:3,sh:0,h:3,arm:6,s:3},
+  {n:"Stormvermin",t:'inf',a:3,sh:0,h:3,arm:5,s:3},
+  {n:"Jezzails",t:'inf',a:3,sh:1,h:3,arm:6,s:3},
+  {n:"Plague Monks",t:'inf',a:5,sh:0,h:3,arm:0,s:3},
+  {n:"Rat Swarms",t:'inf',a:2,sh:0,h:3,arm:0,s:3},
+  {n:"Gutter Runners",t:'inf',a:3,sh:1,h:3,arm:6,s:3},
+  {n:"Rat Ogres",t:'inf',a:4,sh:0,h:4,arm:5,s:3},
+  {n:"Warp Lightning Cannon",t:'art',a:1,sh:3,h:2,arm:0,s:2},
+  {n:"Doom Wheel",t:'mach',a:5,sh:0,h:4,arm:4,s:1},
+],
+
+"Lizardmen":[
+  {n:"Skinks",t:'inf',a:2,sh:1,h:3,arm:0,s:3},
+  {n:"Saurus",t:'inf',a:4,sh:0,h:3,arm:5,s:3},
+  {n:"Temple Guard",t:'inf',a:4,sh:0,h:4,arm:5,s:3},
+  {n:"Salamander",t:'inf',a:2,sh:2,h:3,arm:0,s:1},
+  {n:"Kroxigor",t:'inf',a:5,sh:0,h:3,arm:4,s:3},
+  {n:"Cold One Riders",t:'cav',a:4,sh:0,h:3,arm:4,s:3},
+  {n:"Terradons",t:'mon',a:2,sh:1,h:3,arm:6,s:3},
+  {n:"Stegadon",t:'mon',a:10,sh:3,h:10,arm:4,s:1},
+],
+
+"Bretonnia":[
+  {n:"Men-at-Arms",t:'inf',a:3,sh:0,h:3,arm:6,s:3},
+  {n:"Bowmen",t:'inf',a:3,sh:1,h:3,arm:0,s:3},
+  {n:"Peasants",t:'inf',a:3,sh:0,h:3,arm:0,s:3},
+  {n:"Squires",t:'cav',a:3,sh:1,h:3,arm:6,s:3},
+  {n:"Knights",t:'cav',a:3,sh:0,h:3,arm:4,s:3},
+  {n:"Grail Knights",t:'cav',a:3,sh:0,h:3,arm:4,s:3},
+  {n:"Pegasus Knights",t:'mon',a:2,sh:0,h:3,arm:5,s:3},
+  {n:"Trebuchet",t:'art',a:1,sh:4,h:4,arm:0,s:1},
+],
+
+"Kislev":[
+  {n:"Winged Lancers",t:'cav',a:3,sh:0,h:3,arm:5,s:3},
+  {n:"Horse Archers",t:'cav',a:3,sh:1,h:3,arm:6,s:3},
+  {n:"Cossacks",t:'cav',a:3,sh:1,h:3,arm:5,s:3},
+  {n:"Bowmen",t:'inf',a:3,sh:1,h:3,arm:0,s:3},
+  {n:"Red Guard",t:'inf',a:3,sh:1,h:3,arm:5,s:3},
+  {n:"Axemen",t:'inf',a:3,sh:0,h:3,arm:6,s:3},
+  {n:"Bears",t:'inf',a:5,sh:0,h:4,arm:0,s:3},
+  {n:"War Wagon",t:'mach',a:4,sh:4,h:4,arm:4,s:1},
+],
+
+"Dark Elves":[
+  {n:"Spearmen",t:'inf',a:3,sh:0,h:3,arm:5,s:3},
+  {n:"Crossbowmen",t:'inf',a:3,sh:2,h:3,arm:6,s:3},
+  {n:"Witch Elves",t:'inf',a:5,sh:0,h:3,arm:0,s:3},
+  {n:"Dark Riders",t:'cav',a:3,sh:2,h:3,arm:6,s:3},
+  {n:"Cold One Knights",t:'cav',a:3,sh:0,h:3,arm:4,s:3},
+  {n:"Harpies",t:'mon',a:2,sh:0,h:3,arm:6,s:3},
+  {n:"War Hydra",t:'mon',a:6,sh:2,h:4,arm:4,s:1},
+  {n:"Bolt Thrower",t:'art',a:1,sh:3,h:2,arm:0,s:2},
+],
+
+"Daemons":[
+  {n:"Daemon Horde",t:'inf',a:4,sh:0,h:3,arm:5,s:3},
+  {n:"Daemon Swarm",t:'inf',a:2,sh:0,h:4,arm:0,s:3},
+  {n:"Daemon Cavalry",t:'cav',a:4,sh:0,h:3,arm:5,s:3},
+  {n:"Daemon Hounds",t:'cav',a:3,sh:0,h:3,arm:5,s:3},
+  {n:"Daemon Chariots",t:'char',a:3,sh:0,h:3,arm:5,s:3},
+  {n:"Daemon Beasts",t:'mon',a:5,sh:0,h:4,arm:5,s:3},
+  {n:"Daemon Flyers",t:'mon',a:2,sh:0,h:3,arm:5,s:3},
+  {n:"Greater Daemon",t:'mon',a:8,sh:0,h:6,arm:4,s:1},
+],
+"Vampire Counts":[
+  {n:"Skeletons",t:'inf',a:2,sh:0,h:3,arm:6,s:3},
+  {n:"Zombies",t:'inf',a:2,sh:0,h:4,arm:0,s:3},
+  {n:"Ghouls",t:'inf',a:4,sh:0,h:3,arm:0,s:3},
+  {n:"Grave Guard",t:'inf',a:3,sh:0,h:3,arm:5,s:3},
+  {n:"Ethereal Host",t:'inf',a:3,sh:0,h:4,arm:0,s:3},
+  {n:"Black Knights",t:'cav',a:3,sh:0,h:3,arm:4,s:3},
+  {n:"Dire Wolves",t:'cav',a:2,sh:0,h:3,arm:0,s:3},
+  {n:"Fell Bats",t:'mon',a:2,sh:0,h:3,arm:6,s:3},
+],
+
+"Araby":[
+  {n:"Spearmen",t:'inf',a:3,sh:0,h:3,arm:6,s:3},
+  {n:"Bowmen",t:'inf',a:3,sh:1,h:3,arm:0,s:3},
+  {n:"Guards",t:'inf',a:3,sh:0,h:3,arm:5,s:3},
+  {n:"Knights",t:'cav',a:3,sh:0,h:3,arm:4,s:3},
+  {n:"Desert Riders",t:'cav',a:3,sh:1,h:3,arm:6,s:3},
+  {n:"Camel Riders",t:'cav',a:3,sh:1,h:3,arm:5,s:3},
+  {n:"Magic Carpets",t:'cav',a:1,sh:2,h:3,arm:6,s:3},
+  {n:"Elephants",t:'mon',a:5,sh:0,h:4,arm:5,s:3},
+],
+
+"Dogs of War":[
+  {n:"Pikemen",t:'inf',a:3,sh:0,h:3,arm:6,s:3},
+  {n:"Crossbowmen",t:'inf',a:3,sh:1,h:3,arm:0,s:3},
+  {n:"Handgunners",t:'inf',a:3,sh:1,h:3,arm:0,s:3},
+  {n:"Swordsmen",t:'inf',a:3,sh:0,h:3,arm:6,s:3},
+  {n:"Ogres",t:'inf',a:4,sh:0,h:4,arm:5,s:3},
+  {n:"Dwarfs",t:'inf',a:3,sh:0,h:4,arm:4,s:3},
+  {n:"Marauders",t:'inf',a:3,sh:0,h:3,arm:5,s:3},
+  {n:"Light Cavalry",t:'cav',a:3,sh:1,h:3,arm:6,s:3},
+  {n:"Knights",t:'cav',a:3,sh:0,h:3,arm:4,s:3},
+  {n:"Galloper Guns",t:'art',a:1,sh:2,h:2,arm:0,s:2},
+  {n:"Giant",t:'mon',a:8,sh:0,h:8,arm:5,s:1},
+  {n:"Birdmen",t:'inf',a:2,sh:1,h:3,arm:6,s:3},
+],
+
+"Ogre":[
+  {n:"Bull Ogres",t:'inf',a:4,sh:0,h:4,arm:5,s:3},
+  {n:"Leadbelchers",t:'inf',a:3,sh:2,h:4,arm:6,s:3},
+  {n:"Ironguts",t:'inf',a:4,sh:0,h:4,arm:4,s:3},
+  {n:"Yhetees",t:'inf',a:5,sh:0,h:4,arm:0,s:3},
+  {n:"Gnoblars",t:'inf',a:2,sh:1,h:3,arm:0,s:3},
+  {n:"Gorgers",t:'inf',a:5,sh:0,h:3,arm:5,s:3},
+  {n:"Rhinox Riders",t:'cav',a:5,sh:0,h:4,arm:5,s:3},
+  {n:"Sabretusks",t:'cav',a:3,sh:0,h:3,arm:0,s:3},
+  {n:"Slave Giant",t:'mon',a:8,sh:0,h:8,arm:5,s:1},
+  {n:"Scrap Launcher",t:'art',a:1,sh:3,h:3,arm:0,s:1},
+],
+
+"Albion":[
+  {n:"Warriors",t:'inf',a:3,sh:0,h:3,arm:5,s:3},
+  {n:"Slingers",t:'inf',a:2,sh:1,h:3,arm:0,s:3},
+  {n:"Ogres",t:'inf',a:4,sh:0,h:4,arm:5,s:3},
+  {n:"Wolfhounds",t:'cav',a:3,sh:0,h:3,arm:0,s:3},
+  {n:"Riders",t:'cav',a:3,sh:0,h:3,arm:5,s:3},
+  {n:"Chariots",t:'char',a:3,sh:0,h:3,arm:5,s:3},
+  {n:"Giant",t:'mon',a:8,sh:0,h:8,arm:5,s:1},
+  {n:"Giant Eagles",t:'mon',a:2,sh:0,h:3,arm:6,s:3},
+], 
+
+"Goblin":[
+  {n:"Goblins",t:'inf',a:2,sh:1,h:3,arm:0,s:3},
+  {n:"Squig Herd",t:'inf',a:3,sh:0,h:3,arm:0,s:3},
+  {n:"Trolls",t:'inf',a:5,sh:0,h:3,arm:5,s:3},
+  {n:"Wolf Riders",t:'cav',a:2,sh:1,h:3,arm:6,s:3},
+  {n:"Wolf Chariots",t:'char',a:3,sh:0,h:3,arm:6,s:3},
+  {n:"Pump Wagon",t:'char',a:1,sh:0,h:3,arm:5,s:1},
+  {n:"Giant",t:'mon',a:8,sh:0,h:8,arm:5,s:1},
+  {n:"Doom Diver",t:'art',a:1,sh:3,h:2,arm:0,s:2},
+  {n:"Spear Chukka",t:'art',a:1,sh:2,h:2,arm:0,s:2},
+],
+
+"Witch Hunter":[
+  {n:"Zealots",t:'inf',a:3,sh:0,h:3,arm:0,s:3},
+  {n:"Halberdiers",t:'inf',a:3,sh:0,h:3,arm:6,s:3},
+  {n:"Crossbowmen",t:'inf',a:3,sh:1,h:3,arm:0,s:3},
+  {n:"Handgunners",t:'inf',a:3,sh:1,h:3,arm:0,s:3},
+  {n:"Flagellants",t:'inf',a:5,sh:0,h:3,arm:0,s:3},
+  {n:"Warhounds",t:'inf',a:3,sh:0,h:3,arm:0,s:1},
+  {n:"Knights",t:'cav',a:3,sh:0,h:3,arm:4,s:3},
+  {n:"Pistoliers",t:'cav',a:3,sh:1,h:3,arm:5,s:3},
+  {n:"Cannon",t:'art',a:1,sh:2,h:2,arm:0,s:2},
+],
+
+"Chaos Dwarfs":[
+  {n:"Chaos Dwarfs",t:'inf',a:3,sh:0,h:4,arm:4,s:3},
+  {n:"Blunderbusses",t:'inf',a:3,sh:2,h:4,arm:6,s:3},
+  {n:"Hobgoblins",t:'inf',a:3,sh:1,h:3,arm:0,s:3},
+  {n:"Black Orcs",t:'inf',a:4,sh:0,h:4,arm:5,s:3},
+  {n:"Orc Slaves",t:'inf',a:4,sh:0,h:3,arm:0,s:3},
+  {n:"Hobgoblin Wolf Riders",t:'cav',a:3,sh:1,h:3,arm:6,s:3},
+  {n:"Bull Centaurs",t:'cav',a:4,sh:0,h:4,arm:5,s:3},
+  {n:"Earthshaker Cannon",t:'art',a:1,sh:3,h:3,arm:6,s:1},
+  {n:"Death Rocket",t:'art',a:1,sh:1,h:2,arm:6,s:1},
+  {n:"Bolt Thrower",t:'art',a:1,sh:2,h:2,arm:0,s:2},
+],
+
+"Wood Elves":[
+  {n:"Glade Guard",t:'inf',a:3,sh:1,h:3,arm:0,s:3},
+  {n:"Eternal Guard",t:'inf',a:3,sh:0,h:3,arm:5,s:3},
+  {n:"Wardancers",t:'inf',a:4,sh:0,h:3,arm:0,s:1},
+  {n:"Waywatchers",t:'inf',a:1,sh:2,h:3,arm:0,s:2},
+  {n:"Dryads",t:'inf',a:4,sh:0,h:3,arm:6,s:3},
+  {n:"Treekin",t:'inf',a:4,sh:0,h:4,arm:5,s:3},
+  {n:"Glade Riders",t:'cav',a:3,sh:1,h:3,arm:6,s:3},
+  {n:"Wild Riders",t:'cav',a:3,sh:0,h:3,arm:5,s:3},
+  {n:"Warhawk Riders",t:'mon',a:2,sh:1,h:3,arm:6,s:3},
+  {n:"Treeman",t:'mon',a:6,sh:0,h:4,arm:4,s:1},
+],
+
+"Beastmen":[
+  {n:"Gor",t:'inf',a:4,sh:0,h:3,arm:6,s:3},
+  {n:"Ungor",t:'inf',a:3,sh:1,h:3,arm:0,s:3},
+  {n:"Bestigors",t:'inf',a:4,sh:0,h:3,arm:5,s:3},
+  {n:"Minotaurs",t:'inf',a:5,sh:0,h:4,arm:0,s:3},
+  {n:"Centigors",t:'cav',a:3,sh:1,h:3,arm:6,s:3},
+  {n:"Chaos Hounds",t:'cav',a:3,sh:0,h:3,arm:0,s:3},
+  {n:"Tuskgore Chariots",t:'char',a:3,sh:0,h:3,arm:5,s:3},
+  {n:"Dragon Ogres",t:'mon',a:6,sh:0,h:4,arm:5,s:3},
+  {n:"Chaos Spawn",t:'mon',a:3,sh:3,h:4,arm:3,s:1},
+  {n:"Dragon Ogre Shaggoth",t:'mon',a:8,sh:0,h:8,arm:5,s:1},
+],
+
+"Norse":[
+  {n:"Bondsmen",t:'inf',a:3,sh:0,h:3,arm:5,s:3},
+  {n:"Huscarls",t:'inf',a:4,sh:0,h:3,arm:4,s:3},
+  {n:"Huntsmen",t:'inf',a:3,sh:1,h:3,arm:0,s:3},
+  {n:"Berserkers",t:'inf',a:5,sh:0,h:3,arm:0,s:3},
+  {n:"Ulfwerener",t:'inf',a:4,sh:0,h:4,arm:6,s:3},
+  {n:"Hird Horsemen",t:'cav',a:3,sh:0,h:3,arm:5,s:3},
+  {n:"Storm Giant",t:'mon',a:8,sh:0,h:8,arm:5,s:1},
+  {n:"War Mammoth",t:'mon',a:8,sh:0,h:10,arm:5,s:1},
+  {n:"Valkyries",t:'mon',a:2,sh:0,h:3,arm:5,s:3},
+],
+
+"Cathay":[
+  {n:"Bannermen",t:'inf',a:3,sh:0,h:3,arm:6,s:3},
+  {n:"Crossbows",t:'inf',a:2,sh:1,h:3,arm:0,s:3},
+  {n:"Handguns",t:'inf',a:2,sh:1,h:3,arm:0,s:3},
+  {n:"Terracotta Warriors",t:'inf',a:2,sh:0,h:3,arm:6,s:3},
+  {n:"Maneaters",t:'inf',a:4,sh:0,h:4,arm:4,s:3},
+  {n:"Chariots",t:'char',a:3,sh:1,h:3,arm:5,s:3},
+  {n:"Imperial Cavalry",t:'cav',a:3,sh:0,h:3,arm:5,s:3},
+  {n:"Hu Cavalry",t:'cav',a:2,sh:1,h:3,arm:6,s:3},
+  {n:"Rocket Launcher",t:'art',a:1,sh:1,h:2,arm:0,s:1},
+  {n:"Triple Bows",t:'art',a:1,sh:2,h:2,arm:0,s:2},
+],
+
+"Nippon":[
+  {n:"Ashigaru",t:'inf',a:3,sh:0,h:3,arm:6,s:3},
+  {n:"Ashigaru Bowmen",t:'inf',a:3,sh:1,h:3,arm:0,s:3},
+  {n:"Ashigaru Tepo",t:'inf',a:3,sh:1,h:3,arm:0,s:3},
+  {n:"Samurai",t:'inf',a:4,sh:0,h:3,arm:5,s:3},
+  {n:"Mikata",t:'inf',a:5,sh:0,h:3,arm:0,s:3},
+  {n:"Ninja",t:'inf',a:3,sh:1,h:3,arm:6,s:3},
+  {n:"Oni",t:'inf',a:4,sh:0,h:4,arm:5,s:3},
+  {n:"Samurai Cavalry",t:'cav',a:4,sh:0,h:3,arm:5,s:3},
+  {n:"Komainu",t:'cav',a:2,sh:0,h:3,arm:0,s:3},
+  {n:"Tengu",t:'mon',a:2,sh:0,h:3,arm:5,s:3},
+],
+"Regiments of Renown":[
+  {n:"Pirazzo's Lost Legion",t:'inf',a:3,sh:1,h:3,arm:6,s:3},
+  {n:"Alcatani Fellowship",t:'inf',a:3,sh:0,h:3,arm:6,s:3},
+  {n:"Ricco's Republican Guard",t:'inf',a:3,sh:0,h:3,arm:5,s:3},
+  {n:"Leopold's Leopard Company",t:'inf',a:3,sh:0,h:3,arm:6,s:3},
+  {n:"Marksmen of Miragliano",t:'inf',a:3,sh:1,h:3,arm:0,s:3},
+  {n:"Braganza's Besiegers",t:'inf',a:3,sh:1,h:3,arm:5,s:3},
+  {n:"Lumpin Croop's Cocks",t:'inf',a:3,sh:1,h:3,arm:0,s:3},
+  {n:"Vespero's Vendetta",t:'inf',a:3,sh:1,h:3,arm:0,s:3},
+  {n:"The Cursed Company",t:'inf',a:3,sh:0,h:3,arm:5,s:3},
+  {n:"Mengil's Manflayers",t:'inf',a:3,sh:2,h:3,arm:6,s:3},
+  {n:"Anakonda's Amazons",t:'inf',a:3,sh:1,h:3,arm:6,s:3},
+  {n:"Bearmen of Urslo",t:'inf',a:3,sh:0,h:3,arm:5,s:3},
+  {n:"Ruglud's Armoured Orcs",t:'inf',a:3,sh:1,h:3,arm:5,s:3},
+  {n:"Long Drong's Slayer Pirates",t:'inf',a:3,sh:1,h:4,arm:5,s:3},
+  {n:"Golgfag's Mercenary Ogres",t:'inf',a:4,sh:0,h:4,arm:5,s:3},
+  {n:"Voland's Venators",t:'cav',a:3,sh:0,h:3,arm:4,s:3},
+  {n:"Al Muktar's Desert Dogs",t:'cav',a:3,sh:1,h:3,arm:6,s:3},
+  {n:"Oglah Khan's Wolfboyz",t:'cav',a:2,sh:1,h:3,arm:6,s:3},
+  {n:"Tichi-Huichi's Raiders",t:'cav',a:3,sh:1,h:3,arm:6,s:3},
+  {n:"Birdmen of Catrazza",t:'inf',a:2,sh:1,h:3,arm:6,s:3},
+  {n:"Bronzino's Galloper Guns",t:'art',a:1,sh:2,h:2,arm:0,s:2},
+]
+
+
+
+};
+
+/* ── MATH ───────────────────────────────────────────────── */
+function lB(n,k){if(k<0||k>n)return-Infinity;if(k===0||k===n)return 0;let r=0;for(let i=0;i<k;i++)r+=Math.log(n-i)-Math.log(i+1);return r;}
+function bP(n,k,p){if(k<0||k>n)return 0;if(p<=0)return k===0?1:0;if(p>=1)return k===n?1:0;return Math.exp(lB(n,k)+k*Math.log(p)+(n-k)*Math.log(1-p));}
+function bDist(n,p){n=Math.max(0,Math.round(n));if(n===0)return[1];const d=[];for(let k=0;k<=n;k++)d.push(bP(n,k,p));return d;}
+function ev(d){let e=0;for(let i=0;i<d.length;i++)e+=i*d[i];return e;}
+
+/* ── STATE ──────────────────────────────────────────────── */
+const togS={};
+function tog(btn,id,cls){togS[id]=!togS[id];btn.classList.toggle(cls,togS[id]);onSit();}
+function isOn(id){return!!togS[id];}
+function num(id,def=0){const v=parseInt(document.getElementById(id)?.value);return isNaN(v)?def:v;}
+function gv(id){return document.getElementById(id)?.value||'';}
+function sv(id,v){const el=document.getElementById(id);if(el)el.value=v;}
+function sh(id,b,t='block'){const el=document.getElementById(id);if(el)el.style.display=b?t:'none';}
+
+function getU(s){
+  const army=gv(`${s}-army`),uidx=gv(`${s}-unit`);
+  if(!army||uidx==='')return null;
+  const b=DB[army][parseInt(uidx)];
+  return{name:b.n,type:b.t,s:b.s,a:num(`${s}-sa`,b.a),sh:num(`${s}-ssh`,b.sh),h:num(`${s}-sh`,b.h),arm:num(`${s}-sarm`,b.arm)};
+}
+
+/* ── INIT ───────────────────────────────────────────────── */
+function init(){
+  Object.keys(DB).forEach(army=>['a','d'].forEach(s=>{
+    const o=document.createElement('option');o.value=army;o.textContent=army;
+    document.getElementById(`${s}-army`).appendChild(o);
+  }));
+  buildD6();
+}
+
+function onArmy(s){
+  const army=gv(`${s}-army`);
+  const us=document.getElementById(`${s}-unit`);
+  us.innerHTML='<option value="">— seleziona —</option>';
+  if(army&&DB[army])DB[army].forEach((u,i)=>{const o=document.createElement('option');o.value=i;o.textContent=u.n;us.appendChild(o);});
+  sh(`${s}-sw`,false);sh(`${s}-fw`,false);
+}
+
+function onUnit(s){
+  const army=gv(`${s}-army`),uidx=gv(`${s}-unit`);
+  if(!army||uidx===''){sh(`${s}-sw`,false);sh(`${s}-fw`,false);return;}
+  const u=DB[army][parseInt(uidx)];
+  document.getElementById(`${s}-badge`).textContent=TL[u.t]||u.t;
+  sv(`${s}-sa`,u.a);sv(`${s}-ssh`,u.sh);sv(`${s}-sh`,u.h);sv(`${s}-sarm`,u.arm);sv(`${s}-ss`,u.s);
+  const cs=document.getElementById(`${s}-cs`);cs.max=u.s;cs.value=u.s;
+  sh(`${s}-sw`,true);sh(`${s}-fw`,true);
+  onSit();
+}
+
+function onSit(){
+  const round=gv('sit-round'),pos=gv('sit-pos'),dir=gv('sit-dir');
+  sh('purs-wrap',round==='pursuit');
+  const du=getU('d'),au=getU('a');
+  sh('warn-cav',pos!=='open'&&du&&du.type!=='inf'&&du.type!=='art');
+  sh('warn-chpos',round==='charge'&&pos!=='open');
+  sh('warn-dir',dir!=='front');
+  sh('a-suppw',au&&au.type!=='inf');
+  sh('d-suppw',du&&du.type!=='inf');
+}
+
+/* ── D6 CHARTS ──────────────────────────────────────────── */
+function buildD6(){
+  const d2=[],d3=[];
+  for(let s=2;s<=12;s++){let c=0;for(let a=1;a<=6;a++)for(let b=1;b<=6;b++)if(a+b===s)c++;d2.push({s,p:c/36});}
+  for(let s=3;s<=18;s++){let c=0;for(let a=1;a<=6;a++)for(let b=1;b<=6;b++)for(let c2=1;c2<=6;c2++)if(a+b+c2===s)c++;d3.push({s,p:c/216});}
+  draw6('d6-2',d2);draw6('d6-3',d3);
+}
+
+function draw6(id,dist){
+  const wrap=document.getElementById(id);
+  wrap.innerHTML=''; // clear previous
+
+  const W=wrap.clientWidth||400;
+  const H=120, PAD_L=0, PAD_R=0, BAR_H=80, Y0=BAR_H;
+  const n=dist.length;
+  const colW=Math.floor((W-PAD_L-PAD_R)/n);
+  const maxP=Math.max(...dist.map(d=>d.p));
+
+  // Build cumulative
+  let cum=0;
+  const cumArr=dist.map(d=>{cum+=d.p;return cum;});
+
+  const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+  svg.setAttribute('width','100%');
+  svg.setAttribute('height',H+'px');
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  svg.style.display='block';
+
+  // Bars
+  dist.forEach(({s,p},i)=>{
+    const x=PAD_L+i*colW;
+    const bh=Math.round(p/maxP*BAR_H);
+    const by=Y0-bh;
+
+    const rect=document.createElementNS('http://www.w3.org/2000/svg','rect');
+    rect.setAttribute('x',x+1);rect.setAttribute('y',by);
+    rect.setAttribute('width',colW-2);rect.setAttribute('height',bh);
+    rect.setAttribute('fill','#3a3018');
+    svg.appendChild(rect);
+
+    // hover title
+    const title=document.createElementNS('http://www.w3.org/2000/svg','title');
+    title.textContent=`${s}: ${(p*100).toFixed(2)}% · CDF ≤${s}: ${(cumArr[i]*100).toFixed(1)}%`;
+    rect.appendChild(title);
+
+    // die face number
+    const tx=document.createElementNS('http://www.w3.org/2000/svg','text');
+    tx.setAttribute('x',x+colW/2);tx.setAttribute('y',Y0+10);
+    tx.setAttribute('text-anchor','middle');tx.setAttribute('font-size','7');
+    tx.setAttribute('fill','#3e3828');tx.setAttribute('font-family','Cinzel,Georgia,serif');
+    tx.textContent=s;svg.appendChild(tx);
+
+    // pct label inside bar if tall enough
+    if(bh>14){
+      const pl=document.createElementNS('http://www.w3.org/2000/svg','text');
+      pl.setAttribute('x',x+colW/2);pl.setAttribute('y',by+bh-4);
+      pl.setAttribute('text-anchor','middle');pl.setAttribute('font-size','6');
+      pl.setAttribute('fill','#80724c');pl.setAttribute('font-family','Cinzel,Georgia,serif');
+      pl.textContent=(p*100).toFixed(1)+'%';svg.appendChild(pl);
+    }
+  });
+
+  // Cumulative line — drawn over bars
+  const pts=cumArr.map((c,i)=>{
+    const cx=PAD_L+i*colW+colW/2;
+    const cy=Y0-Math.round(c*BAR_H);
+    return `${cx},${cy}`;
+  });
+  const poly=document.createElementNS('http://www.w3.org/2000/svg','polyline');
+  poly.setAttribute('points',pts.join(' '));
+  poly.setAttribute('fill','none');
+  poly.setAttribute('stroke','#c8a84a');
+  poly.setAttribute('stroke-width','1.5');
+  poly.setAttribute('stroke-linejoin','round');
+  svg.appendChild(poly);
+
+  // Cumulative dots
+  cumArr.forEach((c,i)=>{
+    const cx=PAD_L+i*colW+colW/2;
+    const cy=Y0-Math.round(c*BAR_H);
+    const circle=document.createElementNS('http://www.w3.org/2000/svg','circle');
+    circle.setAttribute('cx',cx);circle.setAttribute('cy',cy);circle.setAttribute('r','2.5');
+    circle.setAttribute('fill','#c8a84a');
+    const t=document.createElementNS('http://www.w3.org/2000/svg','title');
+    t.textContent=`CDF ≤${dist[i].s}: ${(c*100).toFixed(1)}%`;
+    circle.appendChild(t);
+    svg.appendChild(circle);
+  });
+
+  // Baseline
+  const base=document.createElementNS('http://www.w3.org/2000/svg','line');
+  base.setAttribute('x1',PAD_L);base.setAttribute('y1',Y0);
+  base.setAttribute('x2',W-PAD_R);base.setAttribute('y2',Y0);
+  base.setAttribute('stroke','#2a2218');base.setAttribute('stroke-width','1');
+  svg.appendChild(base);
+
+  const svgWrap=document.createElement('div');
+  svgWrap.className='d6-svg-wrap';
+  svgWrap.appendChild(svg);
+  wrap.appendChild(svgWrap);
+
+  // Legend
+  const leg=document.createElement('div');
+  leg.className='d6-legend';
+  leg.innerHTML=`<span><i style="background:#3a3018;border-radius:0"></i> Probabilità</span><span><i style="background:#c8a84a"></i> CDF cumulativa</span>`;
+  wrap.appendChild(leg);
+}
+
+/* ── CALCULATE ──────────────────────────────────────────── */
+function calculate(){
+  const au=getU('a'),du=getU('d');
+  if(!au||!du){alert('Seleziona entrambe le unità!');return;}
+
+  const round=gv('sit-round'),dir=gv('sit-dir'),pos=gv('sit-pos');
+  const atkCS=Math.max(1,Math.min(au.s,num('a-cs',au.s)));
+  const defCS=Math.max(1,Math.min(du.s,num('d-cs',du.s)));
+  const aChar=num('a-char',0),dChar=num('d-char',0);
+  const aSupp=Math.max(0,num('a-supp',0)),dSupp=Math.max(0,num('d-supp',0));
+  const pursD=num('purs-dist',0);
+
+  const isCharge=round==='charge',isPursuit=round==='pursuit';
+  const inOpen=pos==='open';
+  const isMonChar=au.type==='mon'||au.type==='char';
+
+  // ── Modifiers ──
+  let aMod=0;
+  if(isCharge&&inOpen)aMod+=(isMonChar?2:1);
+  if(isPursuit)aMod+=1+Math.floor(pursD/3);
+  if(isOn('a-confused'))aMod-=1;
+  if(isOn('a-terrify'))aMod-=1;
+
+  let dMod=0;
+  if(dir==='flank'||dir==='rear')dMod-=1;
+  if(isOn('d-confused'))dMod-=1;
+  if(isOn('d-terrify'))dMod-=1;
+
+  const hitOn=pos==='fortified'?6:pos==='defended'?5:4;
+
+  // ── Probabilities ──
+  const pAHit=(7-hitOn)/6;
+  const pDSv=du.arm>0?(7-du.arm)/6:0;
+  const pA=Math.max(0,pAHit*(1-pDSv));    // atk net hit prob on def
+
+  const pDHit=3/6;
+  const pASv=au.arm>0?(7-au.arm)/6:0;
+  const pD=Math.max(0,pDHit*(1-pASv));    // def net hit prob on atk
+
+  const pSH=pD; // shoot same as CC hit on atk (4+, atk armour)
+
+  // ── PMFs ──
+  const hasShoot=isCharge&&du.sh>0;
+  const shootDice=hasShoot?defCS*du.sh:0;
+  const shPmf=shootDice>0?bDist(shootDice,pSH):[1];
+
+  // Def CC
+  const dEffA=Math.max(0,du.a+dMod);
+  const dDice=Math.max(1,defCS*dEffA+dChar);
+  const defPmf=bDist(dDice,pD);
+
+  // Atk CC per stands_lost
+  const atkPmfs={};
+  for(let sl=0;sl<=atkCS;sl++){
+    const csIn=Math.max(0,atkCS-sl);
+    const att=Math.max(0,au.a+aMod);
+    const dice=csIn>0?Math.max(1,csIn*att+aChar):0;
+    atkPmfs[sl]=dice>0?bDist(dice,pA):[1];
+  }
+
+  // ── Joint iteration ──
+  let pAw=0,pDr=0,pDw=0;
+  const maxAtkH=atkCS*au.h,maxDefH=defCS*du.h;
+  const atkSL=new Float64Array(atkCS+1);
+  const defSL=new Float64Array(defCS+1);
+  const shSL=new Float64Array(atkCS+1);
+  const mA=new Map(),mD=new Map();
+
+  for(let sh2=0;sh2<shPmf.length;sh2++){
+    const ps=shPmf[sh2];if(ps<1e-12)continue;
+    const slS=Math.min(atkCS,Math.floor(sh2/au.h));
+    shSL[slS]+=ps;
+    const ap=atkPmfs[slS];
+    for(let ah=0;ah<ap.length;ah++){
+      const pa=ap[ah];if(pa<1e-12)continue;
+      const dsl=Math.min(defCS,Math.floor(ah/du.h));
+      for(let dh=0;dh<defPmf.length;dh++){
+        const pd=defPmf[dh];if(pd<1e-12)continue;
+        const tp=ps*pa*pd;
+        // Total hits on atk = sh carry-over + CC
+        const totHAtk=sh2+dh;
+        const asl=Math.min(atkCS,Math.floor(totHAtk/au.h));
+        // Result (cap at max HP)
+        const aR=Math.min(ah,maxDefH)+aSupp;
+        const dR=Math.min(sh2+dh,maxAtkH)+dSupp;
+        if(aR>dR){pAw+=tp;const m=aR-dR;mA.set(m,(mA.get(m)||0)+tp);}
+        else if(aR===dR)pDr+=tp;
+        else{pDw+=tp;const m=dR-aR;mD.set(m,(mD.get(m)||0)+tp);}
+        atkSL[asl]+=tp;
+        defSL[dsl]+=tp;
+      }
+    }
+  }
+
+  const tot=pAw+pDr+pDw;
+  const fA=Math.round(pAw/tot*100),fT=Math.round(pDr/tot*100),fD=100-fA-fT;
+
+  // ── EVs ──
+  const evSh=ev(shPmf);
+  const evDef=ev(defPmf);
+  let evAtk=0;
+  for(let sh2=0;sh2<shPmf.length;sh2++){
+    const sl=Math.min(atkCS,Math.floor(sh2/au.h));
+    evAtk+=shPmf[sh2]*ev(atkPmfs[sl]);
+  }
+  const avgSlSh=Array.from(shSL).reduce((a,p,i)=>a+p*i,0);
+
+  // ── RENDER ──
+  document.getElementById('r-matchup').textContent=`${au.name} (${atkCS} stand) vs ${du.name} (${defCS} stand)`;
+  const inf=[];
+  if(isCharge)inf.push(inOpen?(isMonChar?'Carica Mostro/Carro +2':'Carica +1'):'Carica (NO bonus)');
+  if(isPursuit)inf.push(`Inseguimento +${1+Math.floor(pursD/3)} (ritirata ${pursD}cm)`);
+  if(pos!=='open')inf.push(pos==='defended'?'Difeso hit 5+':'Fortificato hit 6+');
+  if(dir!=='front')inf.push(`${dir==='flank'?'Fianco':'Retro'} → Difensore −1`);
+  if(isOn('a-confused'))inf.push('Attaccante Confuso');
+  if(isOn('d-confused'))inf.push('Difensore Confuso');
+  if(aSupp>0)inf.push(`Supp. ATK +${aSupp}`);
+  if(dSupp>0)inf.push(`Supp. DEF +${dSupp}`);
+  document.getElementById('r-info').textContent=inf.length?inf.join(' · '):'Round normale';
+
+  // Bar
+  document.getElementById('ob-a').style.width=fA+'%';
+  document.getElementById('ob-t').style.width=fT+'%';
+  document.getElementById('ob-d').style.width=fD+'%';
+  document.getElementById('ob-at').textContent=fA>=7?fA+'%':'';
+  document.getElementById('ob-tt').textContent=fT>=7?fT+'%':'';
+  document.getElementById('ob-dt').textContent=fD>=7?fD+'%':'';
+
+  // Shoot panel
+  sh('ph-shoot',hasShoot,'block');
+  if(hasShoot){
+    document.getElementById('rs-name').textContent=du.name;
+    document.getElementById('rs-info').innerHTML=`<b>${shootDice}</b> dadi (${defCS}×${du.sh}) → 4+ → armatura atk <b>${au.arm>0?au.arm+'+':'—'}</b> → P(netto) <b>${(pSH*100).toFixed(1)}%</b> · hits portati nel CC (contano per risultato)`;
+    document.getElementById('rs-ev').textContent=evSh.toFixed(2);
+    document.getElementById('rs-tracker').innerHTML=`<span>Stand inizio: <span class="trkr-v">${atkCS}</span></span><span class="trkr-arr">→</span><span>Stand attesi in CC: <span class="trkr-v">${Math.max(0,atkCS-avgSlSh).toFixed(2)}</span></span>`;
+    renderBars('rs-bars',shSL,false);
+  }
+
+  // Adjust grid columns
+  document.getElementById('ph-grid').style.gridTemplateColumns=hasShoot?'1fr 1fr 1fr':'1fr 1fr';
+
+  // Atk receives
+  document.getElementById('ra-ttl').textContent=hasShoot?'CC — COLPI SUBITI DALL\'ATK (escluso tiro)':'CC — COLPI SUBITI DALL\'ATTACCANTE';
+  document.getElementById('ra-name').textContent=du.name;
+  document.getElementById('ra-info').innerHTML=`<b>${dDice}</b> dadi CC (${defCS}×${Math.max(0,du.a+dMod)}${dChar?'+'+dChar+' pers.':''}) → 4+ → arm. atk <b>${au.arm>0?au.arm+'+':'—'}</b> → P(netto) <b>${(pD*100).toFixed(1)}%</b>`+(hasShoot?` + ${evSh.toFixed(1)} colpi carry-over nel risultato`:'');
+  document.getElementById('ra-ev').textContent=evDef.toFixed(2);
+  document.getElementById('ra-evl').textContent=hasShoot?'colpi CC attesi (+ carry-over tiro nel risultato)':'colpi CC attesi';
+  renderBars('ra-bars',atkSL,false);
+
+  // Def receives
+  document.getElementById('rd-name').textContent=au.name;
+  let avgDice=0;shPmf.forEach((p,sh2)=>{const sl=Math.min(atkCS,Math.floor(sh2/au.h)),csIn=Math.max(0,atkCS-sl),att=Math.max(0,au.a+aMod);avgDice+=p*(csIn>0?Math.max(1,csIn*att+aChar):0);});
+  document.getElementById('rd-info').innerHTML=`~<b>${avgDice.toFixed(1)}</b> dadi CC medi → ${hitOn}+ → arm. def <b>${du.arm>0?du.arm+'+':'—'}</b> → P(netto) <b>${(pA*100).toFixed(1)}%</b>`;
+  document.getElementById('rd-ev').textContent=evAtk.toFixed(2);
+  renderBars('rd-bars',defSL,true);
+
+  // Margins
+  renderMargin('rm-a',mA,'g');
+  renderMargin('rm-d',mD,'r');
+
+  const res=document.getElementById('results');
+  res.classList.add('vis');
+  setTimeout(()=>res.scrollIntoView({behavior:'smooth',block:'start'}),60);
+}
+
+function renderBars(id,sld,isDef){
+  const c=document.getElementById(id);c.innerHTML='';
+  const arr=Array.isArray(sld)?sld:Array.from(sld);
+  const mx=Math.max(...arr);
+  arr.forEach((p,n)=>{
+    // Always show 0-loss row; always show the maximum-loss (wipe) row even if tiny;
+    // hide intermediate rows only if probability is truly negligible (<0.001%)
+    const isWipe=n===arr.length-1;
+    if(p<0.00001&&n>0&&!isWipe)return;
+    if(p===0&&!isWipe)return;
+    const pct=(p*100).toFixed(p<0.01?3:1),w=mx>0?(p/mx*100).toFixed(1):0;
+    let cls=isDef?(n===0?'pbar-r':n>=arr.length-1?'pbar-g':'pbar-y'):(n===0?'pbar-g':n>=arr.length-1?'pbar-r':'pbar-y');
+    const lbl=n===0?'0 stand persi':n===1?'1 stand perso':`${n} stand persi`;
+    const row=document.createElement('div');row.className='prow';
+    row.innerHTML=`<div class="plbl">${lbl}</div><div class="pbg"><div class="pbar ${cls}" style="width:${w}%"></div></div><div class="ppct">${pct}%</div>`;
+    c.appendChild(row);
+  });
+}
+
+function renderMargin(id,dist,col){
+  const c=document.getElementById(id);c.innerHTML='';
+  if(!dist||dist.size===0){c.innerHTML='<div style="font-size:11px;color:var(--txtd);font-style:italic">Nessuna vittoria</div>';return;}
+  const entries=[...dist.entries()].sort((a,b)=>a[0]-b[0]);
+  const mx=Math.max(...entries.map(e=>e[1]));
+  entries.forEach(([m,p])=>{
+    if(p<0.001)return;
+    const pct=(p*100).toFixed(1),w=(p/mx*100).toFixed(1);
+    const row=document.createElement('div');row.className='prow';
+    row.innerHTML=`<div class="plbl">+${m} cm</div><div class="pbg"><div class="pbar pbar-${col}" style="width:${w}%"></div></div><div class="ppct">${pct}%</div>`;
+    c.appendChild(row);
+  });
+}
+
+init();
+</script>
+</body>
+</html>
